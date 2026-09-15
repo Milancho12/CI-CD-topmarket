@@ -1,0 +1,66 @@
+services:
+
+  # ── Сервис 1: PostgreSQL база на податоци ──────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: topmarket-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: topmarket
+      POSTGRES_USER: topmarket
+      POSTGRES_PASSWORD: topmarket_secret
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U topmarket -d topmarket"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Сервис 2: Backend REST API ─────────────────────────────
+  backend:
+    build: ./backend
+    container_name: topmarket-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://topmarket:topmarket_secret@db:5432/topmarket
+      WORKER_URL: http://worker:3001
+      PORT: 3002
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ── Сервис 3: Frontend (EJS + Express) ─────────────────────
+  frontend:
+    build: ./frontend
+    container_name: topmarket-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      BACKEND_URL: http://backend:3002
+      WORKER_URL: http://worker:3001
+      SESSION_SECRET: zitoLuks-super-secret-2024
+      PORT: 3000
+    depends_on:
+      - backend
+
+  # ── Сервис 4: Worker (Puppeteer + Chrome) ──────────────────
+  worker:
+    build: ./worker
+    container_name: topmarket-worker
+    restart: unless-stopped
+    user: "root"
+    environment:
+      DATABASE_URL: postgres://topmarket:topmarket_secret@db:5432/topmarket
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome-stable
+      SOCKS5_PROXY: 100.104.217.75:1080
+      TZ: Europe/Skopje
+      PORT: 3001
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

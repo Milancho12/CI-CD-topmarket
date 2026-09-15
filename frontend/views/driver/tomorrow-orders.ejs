@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="mk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>Нарачки за утре – ZitoLuks</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .orders-header {
+      background: linear-gradient(135deg, #7c3aed, #5b21b6);
+      padding: 20px 16px 16px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .btn-back-white {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .btn-back-white:hover { background: rgba(255,255,255,0.3); }
+    .orders-header-info { flex: 1; }
+    .orders-title { font-size: 20px; font-weight: 800; }
+    .orders-subtitle { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+    .date-selector-row {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .date-selector-row label { font-size: 13px; color: var(--text3); font-weight: 600; }
+    .date-selector-row input[type="date"] {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 14px;
+      background: var(--surface2);
+      color: var(--text);
+    }
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin: 16px;
+      overflow: hidden;
+    }
+    .summary-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface2);
+    }
+    .summary-table { width: 100%; border-collapse: collapse; }
+    .summary-table th {
+      text-align: left;
+      padding: 10px 16px;
+      font-size: 12px;
+      color: var(--text3);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+    .summary-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 15px;
+    }
+    .summary-table tr:last-child td { border-bottom: none; }
+    .summary-table td:last-child { text-align: right; font-weight: 700; font-size: 18px; color: var(--primary); }
+    .code-badge {
+      background: var(--surface2);
+      color: var(--text3);
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-right: 8px;
+      font-weight: 600;
+    }
+    .market-section { margin: 0 16px 16px; }
+    .market-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      padding-top: 16px;
+    }
+    .market-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+    .market-item-row .qty { font-weight: 800; font-size: 18px; color: var(--primary); }
+    .empty-orders {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text3);
+    }
+    .empty-orders .big { font-size: 48px; margin-bottom: 12px; }
+    .empty-orders .msg { font-size: 16px; font-weight: 700; }
+    .empty-orders .sub { font-size: 13px; margin-top: 6px; }
+    .sunday-skip-notice {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .sunday-skip-notice .icon { font-size: 20px; }
+    
+    /* TABS */
+    .tab-bar { display: flex; gap: 4px; margin: 16px; background: var(--surface2, #f1f5f9); border-radius: 12px; padding: 4px; border: 1px solid var(--border, #e2e8f0); }
+    .tab-btn { flex: 1; padding: 10px 16px; border: none; border-radius: 10px; background: transparent; color: var(--text2, #64748b); font-weight: 700; font-size: 14px; cursor: pointer; transition: all .2s; }
+    .tab-btn.active { background: #2563eb; color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .tab-btn.active-large { background: #7c3aed; color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+  </style>
+</head>
+<body>
+<div class="driver-app">
+
+  <!-- Header -->
+    <div class="orders-header">
+    <a href="/driver?date=<%= date %>" class="btn-back-white">←</a>
+    <div class="orders-header-info">
+      <div class="orders-title">📋 Нарачки за утре</div>
+      <div class="orders-subtitle">Внесени на: <%= new Date(date+'T12:00:00').toLocaleDateString('mk-MK',{weekday:'long',day:'numeric',month:'long'}) %></div>
+      <div class="orders-subtitle" style="font-weight:800;margin-top:4px">📅 Испорака: <%= new Date(deliveryDate+'T12:00:00').toLocaleDateString('mk-MK',{weekday:'long',day:'numeric',month:'long'}) %></div>
+    </div>
+  </div>
+
+  <% if (isSundaySkipped) { %>
+  <div class="sunday-skip-notice">
+    <span class="icon">⚠️</span>
+    <span>Следниот ден е неработен – нарачките се прикажани за <strong><%= new Date(deliveryDate+'T12:00:00').toLocaleDateString('mk-MK',{weekday:'long',day:'numeric',month:'long'}) %></strong></span>
+  </div>
+  <% } %>
+
+  <!-- Date Selector -->
+  <div class="date-selector-row">
+    <label>📆 За кој ден:</label>
+    <input type="date" id="date-picker" value="<%= date %>" max="<%= new Date().toISOString().split('T')[0] %>">
+    <button class="btn btn-sm btn-primary" onclick="goToDate()" style="padding:6px 14px">Прикажи</button>
+  </div>
+
+  <% if (normalItems.length === 0 && largeByMarket.length === 0) { %>
+  <div class="empty-orders">
+    <div class="big">📭</div>
+    <div class="msg">Нема нарачки за <%= date %></div>
+    <div class="sub">Внеси нарачки за утре на страницата на пазарот</div>
+  </div>
+  <% } else { %>
+  
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-normal-btn" onclick="switchTab('normal')">🏪 Обични пазари</button>
+    <button class="tab-btn" id="tab-large-btn" onclick="switchTab('large')">🏬 Големи маркети</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-normal">
+    <% if (normalItems.length === 0) { %>
+      <div class="empty-orders"><div class="msg">Нема нарачки за обични пазари</div></div>
+    <% } else { %>
+      <!-- Aggregated summary -->
+      <div class="summary-card">
+        <div class="summary-header">
+          <span>📊</span>
+          <span>Вкупно по артикл</span>
+          <span style="margin-left:auto;font-size:13px;color:var(--text3)"><%= normalItems.length %> артикли</span>
+        </div>
+        <table class="summary-table">
+          <thead>
+            <tr><th>Артикл</th><th style="text-align:right">Количина</th></tr>
+          </thead>
+          <tbody>
+            <% let grandTotal = 0; normalItems.forEach(item => { grandTotal += item.total_qty; %>
+            <tr>
+              <td>
+                <span class="code-badge"><%= item.code %></span>
+                <span><%= item.name %></span>
+              </td>
+              <td><%= item.total_qty %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+          <tfoot>
+            <tr style="background: var(--surface2); border-top: 2px solid var(--primary);">
+              <td style="font-weight: 800; font-size: 16px; padding: 14px 16px;">Вкупно сите артикли:</td>
+              <td style="font-weight: 800; font-size: 22px; color: var(--primary); padding: 14px 16px; text-align: right;"><%= grandTotal %></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Per-market breakdown -->
+      <%
+        const normalMarkets = {};
+        normalByMarket.forEach(r => {
+          if (!normalMarkets[r.market_name]) normalMarkets[r.market_name] = [];
+          normalMarkets[r.market_name].push(r);
+        });
+      %>
+      <% Object.entries(normalMarkets).forEach(([mname, rows]) => { %>
+      <div class="market-section">
+        <div class="market-section-title">🏪 <%= mname %></div>
+        <% rows.forEach(r => { %>
+        <div class="market-item-row">
+          <span>
+            <span class="code-badge"><%= r.code %></span>
+            <span><%= r.art_name %></span>
+          </span>
+          <span class="qty"><%= r.next_day_qty %></span>
+        </div>
+        <% }) %>
+      </div>
+      <% }) %>
+    <% } %>
+  </div>
+
+  <div class="tab-panel" id="tab-large">
+    <% if (largeByMarket.length === 0) { %>
+      <div class="empty-orders"><div class="msg">Нема нарачки за големи маркети</div></div>
+    <% } else { %>
+      <%
+        const largeMarketsGroups = {};
+        largeByMarket.forEach(r => {
+          if (!largeMarketsGroups[r.market_name]) largeMarketsGroups[r.market_name] = [];
+          largeMarketsGroups[r.market_name].push(r);
+        });
+        const lmNames = Object.keys(largeMarketsGroups);
+      %>
+      
+      <% if (lmNames.length > 1) { %>
+      <div style="margin: 0 16px 16px;">
+        <select id="large-market-select" onchange="showLargeMarket(this.value)" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); font-size: 15px; font-weight: 700; background: var(--surface); color: var(--text); outline: none;">
+          <% lmNames.forEach((mname, idx) => { %>
+            <option value="<%= idx %>">🏬 <%= mname %></option>
+          <% }) %>
+        </select>
+      </div>
+      <% } else if (lmNames.length === 1) { %>
+        <div style="margin: 0 16px 16px; padding: 12px; border-radius: 10px; background: #ede9fe; color: #7c3aed; font-weight: 800; font-size: 15px;">
+          🏬 <%= lmNames[0] %>
+        </div>
+      <% } %>
+
+      <% lmNames.forEach((mname, idx) => { 
+        const mdataRows = largeMarketsGroups[mname];
+        let mTotal = 0;
+      %>
+      <div id="large-market-<%= idx %>" class="large-market-container" style="display: <%= idx===0 ? 'block' : 'none' %>;">
+        <div class="summary-card">
+          <table class="summary-table">
+            <thead>
+              <tr><th>Артикл</th><th style="text-align:right">Количина</th></tr>
+            </thead>
+            <tbody>
+              <% mdataRows.forEach(r => { mTotal += r.next_day_qty; %>
+              <tr>
+                <td>
+                  <span class="code-badge"><%= r.code %></span>
+                  <span><%= r.art_name %></span>
+                </td>
+                <td><%= r.next_day_qty %></td>
+              </tr>
+              <% }) %>
+            </tbody>
+            <tfoot>
+              <tr style="background: var(--surface2); border-top: 2px solid #7c3aed;">
+                <td style="font-weight: 800; font-size: 16px; padding: 14px 16px;">Вкупно за маркетот:</td>
+                <td style="font-weight: 800; font-size: 22px; color: #7c3aed; padding: 14px 16px; text-align: right;"><%= mTotal %></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+      <% }) %>
+    <% } %>
+  </div>
+
+  <div style="height:32px"></div>
+  <% } %>
+</div>
+
+<script>
+function switchTab(tab) {
+  document.getElementById('tab-normal').classList.toggle('active', tab === 'normal');
+  document.getElementById('tab-large').classList.toggle('active', tab === 'large');
+  document.getElementById('tab-normal-btn').classList.toggle('active', tab === 'normal');
+  document.getElementById('tab-large-btn').classList.toggle('active-large', tab === 'large');
+}
+
+function showLargeMarket(idx) {
+  document.querySelectorAll('.large-market-container').forEach(el => el.style.display = 'none');
+  const target = document.getElementById('large-market-' + idx);
+  if (target) target.style.display = 'block';
+}
+function goToDate(){
+  const d = document.getElementById('date-picker').value;
+  if (d) window.location.href = '/driver/tomorrow-orders?date=' + d;
+}
+document.getElementById('date-picker').addEventListener('keydown', e => { if(e.key==='Enter') goToDate(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="mk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>ZitoLuks – Испораки</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .date-picker-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .date-picker-bar label { font-size: 13px; color: var(--text3); font-weight: 600; }
+    .date-picker-bar input[type="date"] {
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 14px;
+      background: var(--surface2);
+      color: var(--text);
+      outline: none;
+    }
+    .date-picker-bar input[type="date"]:focus { border-color: var(--primary); }
+    .past-banner {
+      background: linear-gradient(135deg, #f59e0b22, #f59e0b11);
+      border: 1px solid #f59e0b55;
+      border-radius: 10px;
+      margin: 12px 16px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-tomorrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 12px 16px 0;
+      background: linear-gradient(135deg, #7c3aed, #5b21b6);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 13px 20px;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .btn-tomorrow:hover { opacity: 0.9; }
+    .btn-send-order {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 16px 0;
+      background: linear-gradient(135deg, #059669, #047857);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 13px 20px;
+      font-size: 15px;
+      font-weight: 700;
+      width: calc(100% - 32px);
+      text-align: left;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .btn-send-order:hover { opacity: 0.88; }
+    .btn-send-order:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-send-order .spin { display:inline-block; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-send-order.changed {
+      background: linear-gradient(135deg, #d97706, #b45309);
+    }
+    .btn-send-order.sent {
+      background: linear-gradient(135deg, #64748b, #475569);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .ctrl-toggle {
+      display: flex; align-items: center; gap: 10px;
+      margin: 10px 16px 0;
+      background: linear-gradient(135deg, #0f4c81, #1565c0);
+      color: #fff; border: none; border-radius: 12px;
+      padding: 13px 20px; font-size: 15px; font-weight: 700;
+      width: calc(100% - 32px); text-align: left; cursor: pointer;
+    }
+    .ctrl-toggle:hover { opacity: 0.9; }
+    .ctrl-arrow { margin-left: auto; font-size: 20px; transition: transform .3s; display:inline-block; }
+    .ctrl-panel { margin: 8px 16px 0; display: none; flex-direction: column; gap: 8px; }
+    .ctrl-panel.open { display: flex; }
+    .ctrl-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px; background: #fff; border-radius: 12px;
+      box-shadow: 0 2px 8px #0000000e; text-decoration: none;
+      color: inherit; transition: .2s; border: 2px solid transparent;
+    }
+    .ctrl-item:hover { transform: translateY(-1px); box-shadow: 0 4px 16px #1565c020; }
+    .ctrl-item.load:hover { border-color: #1565c0; }
+    .ctrl-item.ret:hover  { border-color: #ef4444; }
+    .ctrl-item.bal:hover  { border-color: #10b981; }
+    .ctrl-icon { font-size: 24px; flex-shrink: 0; }
+    .ctrl-info { flex: 1; }
+    .ctrl-title { font-size: 15px; font-weight: 700; color: #1e293b; }
+    .ctrl-sub   { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+    .ctrl-chev  { color: #cbd5e1; font-size: 18px; }
+    
+    .tab-bar {
+      display: flex; gap: 4px; margin: 16px;
+      background: #f1f5f9; border-radius: 12px; padding: 4px; border: 1px solid #e2e8f0;
+    }
+    .tab-btn {
+      flex: 1; padding: 10px 16px; border: none; border-radius: 10px;
+      background: transparent; color: #64748b; font-weight: 700; font-size: 14px;
+      cursor: pointer; transition: all .2s;
+    }
+    .tab-btn.active {
+      background: #2563eb; color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .tab-btn.active-large {
+      background: #7c3aed; color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+  </style>
+</head>
+<body>
+<div class="driver-app">
+
+  <!-- Header -->
+  <header class="driver-header">
+    <div class="driver-header-inner">
+      <div class="driver-brand">
+        <span class="icon">🍞</span>
+        <div>
+          <div class="name">ZitoLuks</div>
+          <div class="greeting">Добар ден, <%= user.name %>!</div>
+        </div>
+      </div>
+      <form method="POST" action="/logout" style="display:inline">
+        <button type="submit" class="driver-logout">Одјави</button>
+      </form>
+    </div>
+    <div class="driver-date-bar">
+      <span class="date-text">📅 <%= new Date(date+'T12:00:00').toLocaleDateString('mk-MK',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) %></span>
+      <span class="summary">
+        <%= assigned.filter(m=>m.submitted_at).length + extra.filter(m=>m.submitted_at).length %> /
+        <%= assigned.length + extra.length %> поднесено
+      </span>
+    </div>
+  </header>
+
+  <!-- Date Picker -->
+  <div class="date-picker-bar">
+    <label>📆 Избери ден:</label>
+    <input type="date" id="date-picker" value="<%= date %>" max="<%= new Date().toISOString().split('T')[0] %>">
+    <button class="btn btn-sm btn-primary" onclick="goToDate()" style="padding:6px 14px">Прикажи</button>
+    <% if (!isToday) { %>
+    <a href="/driver" style="font-size:13px;color:var(--primary);text-decoration:none;margin-left:4px">↩ Денес</a>
+    <% } %>
+  </div>
+
+  <% if (!isToday) { %>
+  <div class="past-banner">
+    ⚠️ Прикажувате податоци за минат датум — <strong><%= date %></strong>. Само денешни записи можат да се менуваат.
+  </div>
+  <% } %>
+
+  <div class="driver-content">
+
+    <!-- Tomorrow orders shortcut (only on today) -->
+    <% if (isToday) { %>
+    <a href="/driver/tomorrow-orders?date=<%= date %>" class="btn-tomorrow">
+      <span>📋</span>
+      <span>Нарачки за утре</span>
+      <span style="margin-left:auto;font-size:20px">›</span>
+    </a>
+    <% if (user.hasPortal) { %>
+    <button
+      class="btn-send-order <%= orderChanged ? 'changed' : 'sent' %>"
+      id="btn-send-order"
+      onclick="sendOrder()"
+      <%= !orderChanged ? 'disabled title="Нема промени во нарачката"' : '' %>
+    >
+      <span><%= orderChanged ? '⚠️' : '✅' %></span>
+      <span id="btn-send-order-text"><%= orderChanged ? 'Ажурирај нарачка' : 'Нарачката е испратена' %></span>
+      <span style="margin-left:auto;font-size:20px">›</span>
+    </button>
+    <% } %>
+    <% } %>
+
+    <!-- Дневна контрола: Товарен лист / Поврат / Биланс -->
+    <button class="ctrl-toggle" onclick="toggleCtrl()" id="ctrl-toggle">
+      <span>📦</span>
+      <span>Дневна контрола</span>
+      <span class="ctrl-arrow" id="ctrl-arrow">›</span>
+    </button>
+    <div class="ctrl-panel" id="ctrl-panel">
+      <a href="/driver/loading-list?date=<%= date %>" class="ctrl-item load">
+        <div class="ctrl-icon">🚛</div>
+        <div class="ctrl-info">
+          <div class="ctrl-title">Товарен лист</div>
+          <div class="ctrl-sub">Внеси натоварено за денот</div>
+        </div>
+        <div class="ctrl-chev">›</div>
+      </a>
+      <a href="/driver/total-returns?date=<%= date %>" class="ctrl-item ret">
+        <div class="ctrl-icon">↩️</div>
+        <div class="ctrl-info">
+          <div class="ctrl-title">Вкупно поврат</div>
+          <div class="ctrl-sub">Поврат од сите маркети денес</div>
+        </div>
+        <div class="ctrl-chev">›</div>
+      </a>
+      <a href="/driver/total-returns?date=<%= date %>&tab=balance" class="ctrl-item bal">
+        <div class="ctrl-icon">⚖️</div>
+        <div class="ctrl-info">
+          <div class="ctrl-title">Биланс / Провера</div>
+          <div class="ctrl-sub">Товарен лист наспроти нето + поврат</div>
+        </div>
+        <div class="ctrl-chev">›</div>
+      </a>
+    </div>
+
+    <% 
+      const normalAssigned = assigned.filter(m => !m.is_large);
+      const largeAssigned = assigned.filter(m => m.is_large);
+      const extraNormal = extra.filter(m => !m.is_large);
+      const extraLarge = extra.filter(m => m.is_large);
+    %>
+
+    <!-- Normal assigned markets -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-normal-btn" onclick="switchTab('normal')">🏪 Обични пазари</button>
+      <button class="tab-btn" id="tab-large-btn" onclick="switchTab('large')">🏬 Големи маркети</button>
+    </div>
+
+    <div class="tab-panel active" id="tab-normal">
+      <% if (normalAssigned.length > 0) { %>
+      <div class="section-title">📋 <%= isToday ? 'Мои пазари денес' : 'Пазари за ' + date %></div>
+      <% normalAssigned.forEach(m => { %>
+        <a href="/driver/market/<%= m.id %>?date=<%= date %>" class="market-card <%= m.submitted_at ? 'done' : '' %>">
+          <div class="market-icon"><%= m.submitted_at ? '✅' : '🏪' %></div>
+          <div class="market-info">
+            <div class="mname"><%= m.name %></div>
+            <% if(m.address){ %><div class="maddr">📍 <%= m.address %></div><% } %>
+          </div>
+          <div class="market-status">
+            <div class="status-dot <%= m.submitted_at ? 'done' : '' %>"></div>
+            <% if(m.submitted_at){ %><div class="status-time"><%= new Date(m.submitted_at).toLocaleTimeString('mk-MK',{hour:'2-digit',minute:'2-digit'}) %></div><% } %>
+          </div>
+        </a>
+      <% }) %>
+      <% } %>
+
+      <!-- Extra submitted markets (not large) -->
+      <% if (extraNormal.length > 0) { %>
+      <div class="section-title">➕ Дополнителни пазари</div>
+      <% extraNormal.forEach(m => { %>
+        <a href="/driver/market/<%= m.id %>?date=<%= date %>" class="market-card done">
+          <div class="market-icon">✅</div>
+          <div class="market-info">
+            <div class="mname"><%= m.name %></div>
+            <% if(m.address){ %><div class="maddr">📍 <%= m.address %></div><% } %>
+          </div>
+          <div class="market-status">
+            <div class="status-dot done"></div>
+            <% if(m.submitted_at){ %><div class="status-time"><%= new Date(m.submitted_at).toLocaleTimeString('mk-MK',{hour:'2-digit',minute:'2-digit'}) %></div><% } %>
+          </div>
+        </a>
+      <% }) %>
+      <% } %>
+
+      <% if (normalAssigned.length === 0 && extraNormal.length === 0) { %>
+      <div style="text-align:center;padding:60px 20px">
+        <div style="font-size:48px;margin-bottom:12px">📭</div>
+        <div style="font-size:16px;font-weight:700;color:#64748b"><%= isToday ? 'Нема налози за денес' : 'Нема записи за ' + date %></div>
+        <% if (isToday) { %>
+        <div style="font-size:13px;color:#94a3b8;margin-top:6px">Додај пазар со копчето подолу</div>
+        <% } %>
+      </div>
+      <% } %>
+    </div>
+
+    <!-- Large markets section -->
+    <div class="tab-panel" id="tab-large">
+      <% if (largeAssigned.length > 0) { %>
+      <div class="section-title">🏬 Големи маркети</div>
+      <% largeAssigned.forEach(m => { %>
+        <a href="/driver/market/<%= m.id %>?date=<%= date %>" class="market-card <%= m.submitted_at ? 'done' : '' %>" style="border-left: 4px solid #7c3aed;">
+          <div class="market-icon"><%= m.submitted_at ? '✅' : '🏬' %></div>
+          <div class="market-info">
+            <div class="mname"><%= m.name %> <span style="font-size:10px;background:#ede9fe;color:#7c3aed;padding:2px 6px;border-radius:4px;font-weight:700;margin-left:4px">ГОЛЕМ</span></div>
+            <% if(m.address){ %><div class="maddr">📍 <%= m.address %></div><% } %>
+          </div>
+          <div class="market-status">
+            <div class="status-dot <%= m.submitted_at ? 'done' : '' %>"></div>
+            <% if(m.submitted_at){ %><div class="status-time"><%= new Date(m.submitted_at).toLocaleTimeString('mk-MK',{hour:'2-digit',minute:'2-digit'}) %></div><% } %>
+          </div>
+        </a>
+      <% }) %>
+      <% } %>
+      
+      <!-- Extra submitted large markets -->
+      <% if (extraLarge.length > 0) { %>
+      <div class="section-title">➕ Дополнителни големи маркети</div>
+      <% extraLarge.forEach(m => { %>
+        <a href="/driver/market/<%= m.id %>?date=<%= date %>" class="market-card <%= m.submitted_at ? 'done' : '' %>" style="border-left: 4px solid #7c3aed;">
+          <div class="market-icon"><%= m.submitted_at ? '✅' : '🏬' %></div>
+          <div class="market-info">
+            <div class="mname"><%= m.name %> <span style="font-size:10px;background:#ede9fe;color:#7c3aed;padding:2px 6px;border-radius:4px;font-weight:700;margin-left:4px">ГОЛЕМ</span></div>
+            <% if(m.address){ %><div class="maddr">📍 <%= m.address %></div><% } %>
+          </div>
+          <div class="market-status">
+            <div class="status-dot <%= m.submitted_at ? 'done' : '' %>"></div>
+            <% if(m.submitted_at){ %><div class="status-time"><%= new Date(m.submitted_at).toLocaleTimeString('mk-MK',{hour:'2-digit',minute:'2-digit'}) %></div><% } %>
+          </div>
+        </a>
+      <% }) %>
+      <% } %>
+
+      <% if (largeAssigned.length === 0 && extraLarge.length === 0) { %>
+      <div style="text-align:center;padding:60px 20px">
+        <div style="font-size:48px;margin-bottom:12px">🏬</div>
+        <div style="font-size:16px;font-weight:700;color:#64748b">Нема големи маркети за денес</div>
+      </div>
+      <% } %>
+    </div>
+
+    <div style="height:100px"></div>
+  </div>
+
+</div>
+
+<!-- Floating Add extra market -->
+<div style="position:fixed; bottom:0; left:0; width:100%; padding:16px; background:linear-gradient(to top, var(--bg, #f8fafc) 60%, transparent); display:flex; justify-content:center; pointer-events:none; z-index:90;">
+  <button class="btn-add-market" onclick="document.getElementById('market-modal').classList.add('open')" style="pointer-events:auto; margin:0; width:90%; max-width:400px; box-shadow:0 8px 20px rgba(37,99,235,0.4);">
+    ➕ Додај дополнителен пазар
+  </button>
+</div>
+
+<!-- Market picker modal -->
+<div class="driver-modal" id="market-modal">
+  <div class="driver-modal-inner">
+    <h3>Избери пазар</h3>
+    <input type="text" id="market-search" placeholder="🔍 Пребарај..." style="width:100%;border:2px solid #e2e8f0;border-radius:10px;padding:10px 14px;font-size:15px;margin-bottom:12px;outline:none">
+    <div id="market-list">
+      <% allMarkets.forEach(m => { %>
+      <div class="market-select-item" onclick="goToMarket(<%= m.id %>)" data-name="<%= m.name.toLowerCase() %>">
+        <span class="msi-icon">🏪</span>
+        <span class="msi-name"><%= m.name %></span>
+      </div>
+      <% }) %>
+    </div>
+    <button class="btn-modal-close" onclick="document.getElementById('market-modal').classList.remove('open')">Откажи</button>
+  </div>
+</div>
+
+<script>
+function switchTab(tab) {
+  document.getElementById('tab-normal').classList.toggle('active', tab === 'normal');
+  document.getElementById('tab-large').classList.toggle('active', tab === 'large');
+  document.getElementById('tab-normal-btn').classList.toggle('active', tab === 'normal');
+  document.getElementById('tab-large-btn').classList.toggle('active-large', tab === 'large');
+}
+
+function goToMarket(id){ window.location.href='/driver/market/'+id+'?date=<%= date %>'; }
+
+const marketSearch = document.getElementById('market-search');
+if (marketSearch) {
+  marketSearch.addEventListener('input', function(){
+    const q=this.value.toLowerCase();
+    document.querySelectorAll('.market-select-item').forEach(el=>{
+      el.style.display=el.dataset.name.includes(q)?'flex':'none';
+    });
+  });
+}
+
+const modal = document.getElementById('market-modal');
+if (modal) modal.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+
+function goToDate(){
+  const d = document.getElementById('date-picker').value;
+  if (d) window.location.href = '/driver?date=' + d;
+}
+document.getElementById('date-picker').addEventListener('keydown', e => { if(e.key==='Enter') goToDate(); });
+
+function toggleCtrl() {
+  const panel = document.getElementById('ctrl-panel');
+  const arrow = document.getElementById('ctrl-arrow');
+  const open = panel.classList.toggle('open');
+  arrow.style.transform = open ? 'rotate(90deg)' : 'rotate(0deg)';
+}
+
+async function sendOrder() {
+  const btn = document.getElementById('btn-send-order');
+  const txt = document.getElementById('btn-send-order-text');
+  if (!confirm('Дали сте сигурни дека сакате рачно да ги испратите нарачките за утре на Matrix порталот?\nПроцесот ќе се изврши во позадина.')) return;
+  btn.disabled = true;
+  txt.innerHTML = '<span class="spin">⏳</span> Се испраќа...';
+  try {
+    const r = await fetch('/driver/send-order', { method: 'POST' });
+    const d = await r.json();
+    if (d.success) {
+      txt.textContent = '✅ Испратено!';
+      btn.classList.remove('changed');
+      setTimeout(() => { btn.disabled = false; txt.textContent = 'Прати нарачка за утре'; }, 5000);
+      // Show a simple toast if available, otherwise alert
+      if (typeof toast === 'function') toast(d.message || 'Ставено во ред!', 'success', 6000);
+      else alert(d.message || 'Нарачката е ставена во ред за испраќање.');
+    } else {
+      txt.textContent = '❌ Грешка';
+      setTimeout(() => { btn.disabled = false; txt.textContent = 'Прати нарачка за утре'; }, 4000);
+      alert('Грешка: ' + (d.error || 'Непозната грешка'));
+    }
+  } catch (err) {
+    txt.textContent = '❌ Грешка';
+    setTimeout(() => { btn.disabled = false; txt.textContent = 'Прати нарачка за утре'; }, 4000);
+    alert('Мрежна грешка: ' + err.message);
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<%- include('_header', { title: group.label + ' — Продажба', page: 'bread-' + groupKey }) %>
+
+<form method="GET" action="/admin/bread-report/<%= groupKey %>" class="filter-row no-print">
+  <div class="field"><label>Од датум</label><input type="date" name="date_from" value="<%= filters.date_from %>"></div>
+  <div class="field"><label>До датум</label><input type="date" name="date_to"   value="<%= filters.date_to %>"></div>
+  <div class="field"><label>Пазар (опционално)</label>
+    <select name="market_id">
+      <option value="">— Сите пазари —</option>
+      <% markets.forEach(m => { %><option value="<%= m.id %>" <%= filters.market_id==m.id?'selected':'' %>><%= m.name %></option><% }) %>
+    </select>
+  </div>
+  <div class="field" style="margin-top:auto"><button type="submit" class="btn btn-primary">🔍 Пребарај</button></div>
+</form>
+
+<%
+  // Group rows by market
+  const byMarket = {};
+  rows.forEach(r => {
+    if (!byMarket[r.market_name]) byMarket[r.market_name] = [];
+    byMarket[r.market_name].push(r);
+  });
+  const grandDel    = rows.reduce((s, r) => s + (r.tot_del||0), 0);
+  const grandRet    = rows.reduce((s, r) => s + (r.tot_ret||0), 0);
+  const grandNet    = rows.reduce((s, r) => s + (r.net_qty||0), 0);
+  const grandAmount = rows.reduce((s, r) => s + (r.net_amount||0), 0);
+
+  const iconMap = { sekojedneven: '🍞', specijalen: '🥖', tost: '🍽️' };
+  const icon = iconMap[groupKey] || '🍞';
+%>
+
+<div class="card" style="margin-bottom:16px">
+  <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap;padding:14px 16px">
+    <div style="flex:1;min-width:120px;background:var(--info-dim,#dbeafe);border:1px solid #3b82f640;border-radius:10px;padding:12px;text-align:center">
+      <div style="font-size:11px;color:var(--info);font-weight:700;margin-bottom:4px">🚚 ИСПОРАЧАНО</div>
+      <div style="font-size:24px;font-weight:800;color:var(--info)"><%= grandDel %></div>
+    </div>
+    <div style="flex:1;min-width:120px;background:var(--danger-dim,#fee2e2);border:1px solid #ef444440;border-radius:10px;padding:12px;text-align:center">
+      <div style="font-size:11px;color:var(--danger);font-weight:700;margin-bottom:4px">↩️ ВРАТЕНО</div>
+      <div style="font-size:24px;font-weight:800;color:var(--danger)"><%= grandRet %></div>
+    </div>
+    <div style="flex:1;min-width:120px;background:var(--success-dim,#dcfce7);border:1px solid #10b98140;border-radius:10px;padding:12px;text-align:center">
+      <div style="font-size:11px;color:var(--success);font-weight:700;margin-bottom:4px">✅ НЕТО</div>
+      <div style="font-size:24px;font-weight:800;color:var(--success)"><%= grandNet %></div>
+    </div>
+    <div style="flex:1;min-width:160px;background:#fef9c340;border:1px solid #eab30840;border-radius:10px;padding:12px;text-align:center">
+      <div style="font-size:11px;color:#b45309;font-weight:700;margin-bottom:4px">💰 ВКУПЕН ИЗНОС</div>
+      <div style="font-size:24px;font-weight:800;color:#b45309"><%= Math.round(grandAmount) %> ден.</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title"><%= icon %> <%= group.label %> – Детали по пазар</span>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sm btn-outline no-print" onclick="window.print()">🖨️ Печати</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <% if (rows.length === 0) { %>
+    <div class="empty"><div class="empty-icon"><%= icon %></div><p>Нема записи за избраниот период</p></div>
+    <% } else { %>
+
+    <% Object.entries(byMarket).forEach(([market, items]) => {
+         const mDel = items.reduce((s, r) => s + (r.tot_del||0), 0);
+         const mRet = items.reduce((s, r) => s + (r.tot_ret||0), 0);
+         const mNet = items.reduce((s, r) => s + (r.net_qty||0), 0);
+         const mAmt = items.reduce((s, r) => s + (r.net_amount||0), 0);
+    %>
+    <h3 style="margin:18px 0 6px;font-size:14px;color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:4px">
+      🏪 <%= market %>
+      <span style="float:right;font-size:12px;color:var(--text3);font-weight:400">
+        Нето: <strong style="color:var(--success)"><%= mNet %></strong> &nbsp;|&nbsp;
+        <strong style="color:#b45309"><%= Math.round(mAmt) %> ден.</strong>
+      </span>
+    </h3>
+    <table style="margin-bottom:4px">
+      <thead><tr>
+        <th>Шифра</th><th>Производ</th>
+        <th style="text-align:center">Испорачано</th>
+        <th style="text-align:center">Вратено</th>
+        <th style="text-align:center">Нето</th>
+        <th style="text-align:right">Износ</th>
+      </tr></thead>
+      <tbody>
+      <% items.forEach(r => { %>
+        <tr>
+          <td><span class="badge" style="background:var(--surface2);color:var(--text3)"><%= r.art_code %></span></td>
+          <td><%= r.art_name %></td>
+          <td style="text-align:center"><span class="badge badge-info"><%= r.tot_del %></span></td>
+          <td style="text-align:center"><span class="badge badge-danger"><%= r.tot_ret %></span></td>
+          <td style="text-align:center"><span class="badge badge-success"><%= r.net_qty %></span></td>
+          <td style="text-align:right;font-size:13px;color:#b45309;font-weight:600"><%= Math.round(r.net_amount||0) %> ден.</td>
+        </tr>
+      <% }) %>
+      </tbody>
+      <tfoot>
+        <tr style="background:var(--surface2);font-weight:700">
+          <td colspan="2" style="text-align:right;padding:6px 12px">Вкупно пазар:</td>
+          <td style="text-align:center;color:var(--info)"><%= mDel %></td>
+          <td style="text-align:center;color:var(--danger)"><%= mRet %></td>
+          <td style="text-align:center;color:var(--success)"><%= mNet %></td>
+          <td style="text-align:right;color:#b45309"><%= Math.round(mAmt) %> ден.</td>
+        </tr>
+      </tfoot>
+    </table>
+    <% }) %>
+
+    <div style="margin-top:18px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:flex-end;gap:24px;font-weight:700">
+      <span>🚚 <span style="color:var(--info)"><%= grandDel %></span></span>
+      <span>↩️ <span style="color:var(--danger)"><%= grandRet %></span></span>
+      <span>✅ <span style="color:var(--success)"><%= grandNet %></span></span>
+      <span>💰 <span style="color:#b45309"><%= Math.round(grandAmount) %> ден.</span></span>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('_footer') %>

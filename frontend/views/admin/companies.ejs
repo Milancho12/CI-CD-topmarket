@@ -1,0 +1,95 @@
+<%- include('_header', { title: 'Фирми', page: 'companies' }) %>
+
+<div class="card-header" style="margin-bottom:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px">
+  <span class="card-title">🏢 Список на фирми (<span id="cnt"><%= companies.length %></span>)</span>
+  <button class="btn btn-primary" onclick="openModal('modal-add')">+ Додај фирма</button>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <% if (companies.length === 0) { %>
+    <div class="empty"><div class="empty-icon">🏢</div><p>Нема додадени фирми</p></div>
+    <% } else { %>
+    <table id="companies-table">
+      <thead><tr><th>#</th><th>Назив на фирма</th><th>Број на пазари</th><th>Акции</th></tr></thead>
+      <tbody>
+      <% companies.forEach((c,i) => { %>
+        <tr id="row-<%= c.id %>">
+          <td style="color:var(--text3)"><%= i+1 %></td>
+          <td><strong><%= c.name %></strong></td>
+          <td>
+            <span class="badge badge-info"><%= c.market_count %> пазар<%= c.market_count === 1 ? '' : 'и' %></span>
+          </td>
+          <td>
+            <div class="btn-group">
+              <button class="btn btn-sm btn-outline" onclick='editCompany(<%= JSON.stringify(c) %>)'>✏️ Уреди</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteCompany(<%= c.id %>, '<%= c.name.replace(/'/g,"\\'") %>')">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+    <% } %>
+  </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header"><h3>Додај фирма</h3><button class="modal-close" onclick="closeModal('modal-add')">✕</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Назив на фирма *</label><input id="add-name" placeholder="пр. ЖитоЛукс"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-add')">Откажи</button><button class="btn btn-primary" onclick="addCompany()">Зачувај</button></div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="modal-edit">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header"><h3>Уреди фирма</h3><button class="modal-close" onclick="closeModal('modal-edit')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="field"><label>Назив на фирма *</label><input id="edit-name"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-edit')">Откажи</button><button class="btn btn-primary" onclick="updateCompany()">Зачувај</button></div>
+  </div>
+</div>
+
+<script>
+async function addCompany() {
+  const name = document.getElementById('add-name').value.trim();
+  if (!name) { toast('Внеси назив на фирма', 'error'); return; }
+  const r = await fetch('/admin/api/companies', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name }) });
+  const d = await r.json();
+  if (d.success) { toast('Фирмата е додадена!'); setTimeout(() => location.reload(), 800); }
+  else toast(d.error, 'error');
+}
+
+function editCompany(c) {
+  document.getElementById('edit-id').value = c.id;
+  document.getElementById('edit-name').value = c.name || '';
+  openModal('modal-edit');
+}
+
+async function updateCompany() {
+  const id = document.getElementById('edit-id').value;
+  const name = document.getElementById('edit-name').value.trim();
+  if (!name) { toast('Внеси назив на фирма', 'error'); return; }
+  const r = await fetch('/admin/api/companies/' + id, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name }) });
+  const d = await r.json();
+  if (d.success) { toast('Зачувано!'); setTimeout(() => location.reload(), 800); }
+  else toast(d.error, 'error');
+}
+
+async function deleteCompany(id, name) {
+  if (!confirm(`Избриши фирма "${name}"?\nСите поврзани пазари ќе останат, само врската ќе се тргне.`)) return;
+  const r = await fetch('/admin/api/companies/' + id, { method:'DELETE' });
+  const d = await r.json();
+  if (d.success) { document.getElementById('row-' + id).remove(); toast('Фирмата е избришана'); }
+  else toast(d.error, 'error');
+}
+</script>
+
+<%- include('_footer') %>

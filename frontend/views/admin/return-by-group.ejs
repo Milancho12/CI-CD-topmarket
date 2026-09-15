@@ -1,0 +1,71 @@
+<%- include('_header', { title: 'Поврат по група на производ', page: 'return-by-group' }) %>
+
+<form method="GET" action="/admin/return-by-group" class="filter-row no-print">
+  <div class="field"><label>Од датум</label><input type="date" name="date_from" value="<%= filters.date_from %>"></div>
+  <div class="field"><label>До датум</label><input type="date" name="date_to"   value="<%= filters.date_to %>"></div>
+  <div class="field" style="margin-top:auto"><button type="submit" class="btn btn-primary">🔍 Пребарај</button></div>
+</form>
+
+<% const groupColors = {
+  sekojedneven: { bg: 'var(--info-dim,#dbeafe)',    border: '#3b82f640', accent: 'var(--info)',    icon: '🍞' },
+  specijalen:   { bg: 'var(--success-dim,#dcfce7)', border: '#10b98140', accent: 'var(--success)', icon: '🥖' },
+  tost:         { bg: '#fef9c340',                  border: '#eab30840', accent: '#b45309',        icon: '🍽️' },
+}; %>
+
+<% result.forEach(g => {
+  const tot_del = g.rows.reduce((s, r) => s + (r.tot_del||0), 0);
+  const tot_ret = g.rows.reduce((s, r) => s + (r.tot_ret||0), 0);
+  const net_qty = g.rows.reduce((s, r) => s + (r.net_qty||0), 0);
+  const c = groupColors[g.key] || { bg:'var(--surface2)', border:'var(--border)', accent:'var(--primary)', icon:'📦' };
+%>
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header" style="background:<%= c.bg %>;border-bottom:1px solid <%= c.border %>">
+    <span class="card-title" style="color:<%= c.accent %>"><%= c.icon %> <%= g.label %></span>
+    <div style="display:flex;gap:16px;font-size:13px">
+      <span>🚚 Испор: <strong><%= tot_del %></strong></span>
+      <span style="color:var(--danger)">↩️ Врат: <strong><%= tot_ret %></strong></span>
+      <span style="color:var(--success)">✅ Нето: <strong><%= net_qty %></strong></span>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <% if (g.rows.length === 0) { %>
+    <div class="empty" style="padding:24px"><div class="empty-icon" style="font-size:24px"><%= c.icon %></div><p>Нема записи за оваа група</p></div>
+    <% } else { %>
+    <table>
+      <thead><tr>
+        <th>Шифра</th><th>Производ</th>
+        <th style="text-align:center">Испорачано</th>
+        <th style="text-align:center">Вратено</th>
+        <th style="text-align:center">Нето</th>
+        <th style="text-align:center">% Поврат</th>
+      </tr></thead>
+      <tbody>
+      <% g.rows.forEach(r => {
+           const pct = r.tot_del > 0 ? ((r.tot_ret / r.tot_del) * 100).toFixed(1) : '0.0';
+      %>
+        <tr>
+          <td><span class="badge" style="background:var(--surface2);color:var(--text3)"><%= r.art_code %></span></td>
+          <td><%= r.art_name %></td>
+          <td style="text-align:center"><span class="badge badge-info"><%= r.tot_del %></span></td>
+          <td style="text-align:center"><span class="badge badge-danger"><%= r.tot_ret %></span></td>
+          <td style="text-align:center"><span class="badge badge-success"><%= r.net_qty %></span></td>
+          <td style="text-align:center;font-size:12px;color:<%= parseFloat(pct)>20 ? 'var(--danger)' : 'var(--text3)' %>;font-weight:700"><%= pct %>%</td>
+        </tr>
+      <% }) %>
+      </tbody>
+      <tfoot>
+        <tr style="background:var(--surface2);font-weight:700">
+          <td colspan="2" style="text-align:right;padding:6px 12px">Вкупно:</td>
+          <td style="text-align:center;color:var(--info)"><%= tot_del %></td>
+          <td style="text-align:center;color:var(--danger)"><%= tot_ret %></td>
+          <td style="text-align:center;color:var(--success)"><%= net_qty %></td>
+          <td style="text-align:center;color:var(--text3);font-size:12px"><%= tot_del > 0 ? ((tot_ret/tot_del)*100).toFixed(1) : '0.0' %>%</td>
+        </tr>
+      </tfoot>
+    </table>
+    <% } %>
+  </div>
+</div>
+<% }) %>
+
+<%- include('_footer') %>

@@ -1,0 +1,119 @@
+<%- include('_header', { title: 'Поврат по комитент', page: 'return-by-client' }) %>
+
+<form method="GET" action="/admin/return-by-client" class="filter-row no-print">
+  <div class="field"><label>Од датум</label><input type="date" name="date_from" value="<%= filters.date_from %>"></div>
+  <div class="field"><label>До датум</label><input type="date" name="date_to"   value="<%= filters.date_to %>"></div>
+  <div class="field"><label>🏢 Фирма (опционално)</label>
+    <select name="company_id" id="filter-company" onchange="filterMarkets()">
+      <option value="">— Сите фирми —</option>
+      <% companies.forEach(c => { %><option value="<%= c.id %>" <%= filters.company_id==c.id?'selected':'' %>><%= c.name %></option><% }) %>
+    </select>
+  </div>
+  <div class="field"><label>Комитент (Пазар)</label>
+    <select name="market_id" id="filter-market">
+      <option value="">— Сите —</option>
+      <% markets.forEach(m => { %><option value="<%= m.id %>" data-company="<%= m.company_id||'' %>" <%= filters.market_id==m.id?'selected':'' %>><%= m.name %></option><% }) %>
+    </select>
+  </div>
+  <div class="field"><label>Шифра на производ</label>
+    <select name="article_code">
+      <option value="">— Сите производи —</option>
+      <% articles.forEach(a => { %><option value="<%= a.code %>" <%= filters.article_code==a.code?'selected':'' %>><%= a.code %> – <%= a.name %></option><% }) %>
+    </select>
+  </div>
+  <div class="field" style="margin-top:auto"><button type="submit" class="btn btn-primary">🔍 Пребарај</button></div>
+</form>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">↩️ Поврат по комитент (<%= rows.length %> записи)</span>
+    <button class="btn btn-sm btn-outline no-print" onclick="window.print()">🖨️ Печати</button>
+  </div>
+  <div class="table-wrap">
+    <% if (rows.length === 0) { %>
+    <div class="empty"><div class="empty-icon">📭</div><p>Нема поврат за избраните филтри</p></div>
+    <% } else {
+      // Group rows by market
+      const byMarket = {};
+      rows.forEach(r => {
+        if (!byMarket[r.market_name]) byMarket[r.market_name] = [];
+        byMarket[r.market_name].push(r);
+      });
+
+      const marketGroups = Object.entries(byMarket).map(([market, items]) => {
+        return {
+          market,
+          items,
+          mTotal: items.reduce((s, r) => s + r.tot_ret, 0)
+        };
+      });
+
+      marketGroups.sort((a, b) => b.mTotal - a.mTotal);
+    %>
+    <% let grandTotal = 0; %>
+    <% marketGroups.forEach(({ market, items, mTotal }) => {
+         grandTotal += mTotal;
+    %>
+    <h3 style="margin:18px 0 6px;font-size:14px;color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:4px">
+      🏪 <%= market %>
+    </h3>
+    <table style="margin-bottom:4px">
+      <thead><tr>
+        <th>Шифра</th><th>Производ</th>
+        <th style="text-align:center">Испорачано</th>
+        <th style="text-align:center">Вратено</th>
+        <th style="text-align:center">Нето</th>
+      </tr></thead>
+      <tbody>
+      <% items.forEach(r => { %>
+        <tr>
+          <td><span class="badge" style="background:var(--surface2);color:var(--text3)"><%= r.art_code %></span></td>
+          <td><%= r.art_name %></td>
+          <td style="text-align:center"><span class="badge badge-info"><%= r.tot_del %></span></td>
+          <td style="text-align:center"><span class="badge badge-danger"><%= r.tot_ret %></span></td>
+          <td style="text-align:center"><span class="badge badge-success"><%= r.net_qty %></span></td>
+        </tr>
+      <% }) %>
+      </tbody>
+      <tfoot>
+        <tr style="background:var(--surface2)">
+          <td colspan="3" style="text-align:right;font-weight:700;padding:6px 12px">Вкупно вратено:</td>
+          <td style="text-align:center;font-weight:700;color:var(--danger)"><%= mTotal %></td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+    <% }) %>
+    <div style="margin-top:18px;padding:12px 16px;background:var(--danger-dim,#fee2e2);border:1px solid #ef444440;border-radius:10px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:20px">↩️</span>
+      <div>
+        <div style="font-size:12px;color:var(--danger);font-weight:700">ВКУПЕН ПОВРАТ — сите комитенти</div>
+        <div style="font-size:22px;font-weight:800;color:var(--danger)"><%= grandTotal %> парчиња</div>
+      </div>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+(function() {
+  const companyVal = '<%= filters.company_id %>';
+  if (companyVal) filterMarkets();
+})();
+
+function filterMarkets() {
+  const companyId = document.getElementById('filter-company').value;
+  const marketSel = document.getElementById('filter-market');
+  Array.from(marketSel.options).forEach(opt => {
+    if (!opt.value) { opt.style.display = ''; return; }
+    const belongs = !companyId || opt.dataset.company == companyId;
+    opt.style.display = belongs ? '' : 'none';
+  });
+  const selectedOpt = marketSel.options[marketSel.selectedIndex];
+  if (selectedOpt && selectedOpt.style.display === 'none') {
+    marketSel.value = '';
+  }
+}
+</script>
+
+<%- include('_footer') %>

@@ -1,0 +1,19 @@
+{
+  "name": "topmarket-worker",
+  "version": "1.0.0",
+  "description": "TopMarket Puppeteer Worker - Chrome automation service",
+  "main": "worker.js",
+  "scripts": {
+    "start": "node worker.js",
+    "dev": "nodemon worker.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-cron": "^4.6.0",
+    "pg": "^8.11.3",
+    "puppeteer": "^25.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  }
+}
