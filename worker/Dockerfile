@@ -8,9 +8,6 @@ COPY package*.json ./
 
 RUN npm install
 
-# Create symlink for bundled Chrome
-RUN ln -s $(find /home/pptruser/.cache/puppeteer/chrome -name "chrome" -type f | head -n 1) /usr/bin/google-chrome-stable
-
 COPY . .
 
 RUN chown -R pptruser:pptruser /app
