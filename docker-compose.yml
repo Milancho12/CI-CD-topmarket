@@ -36,7 +36,7 @@ services:
     container_name: topmarket-frontend
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3005:3000"
     environment:
       BACKEND_URL: http://backend:3002
       WORKER_URL: http://worker:3001

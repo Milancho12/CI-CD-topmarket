@@ -6,7 +6,9 @@ USER root
 
 COPY package*.json ./
 
-RUN npm install
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
+RUN npm install --ignore-scripts
 
 COPY . .
 
