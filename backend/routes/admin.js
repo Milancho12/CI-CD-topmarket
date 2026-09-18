@@ -204,7 +204,7 @@ router.get('/reports/word', async (req, res) => {
       }
     }
     if (children.length === 0) return res.status(404).json({ error: 'Нема податоци за избраниот период' });
-    const doc = new Document({ creator: 'ZitoLuks', title: `Извештај ${date_from} – ${date_to}`, sections: [{ children }] });
+    const doc = new Document({ creator: 'TopMarket', title: `Извештај ${date_from} – ${date_to}`, sections: [{ children }] });
     const buffer = await Packer.toBuffer(doc);
     res.set('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     res.set('Content-Disposition', `attachment; filename="Izvestaj_${date_from}_${date_to}.docx"`);
@@ -286,8 +286,8 @@ router.get('/zito-report/excel', async (req, res) => {
     const rows = await db.allAsync(sql, params);
     const dateStr = date_from === date_to ? date_from : `${date_from} do ${date_to}`;
     const wb = new ExcelJS.Workbook();
-    wb.creator = 'ZitoLuks';
-    const ws = wb.addWorksheet('ZitoLuks Извештај', { views: [{ state: 'frozen', ySplit: 2 }] });
+    wb.creator = 'TopMarket';
+    const ws = wb.addWorksheet('TopMarket Извештај', { views: [{ state: 'frozen', ySplit: 2 }] });
     ws.columns = [{ width: 14 },{ width: 12 },{ width: 12 },{ width: 22 },{ width: 12 },{ width: 14 },{ width: 24 },{ width: 14 },{ width: 28 },{ width: 11 },{ width: 12 },{ width: 10 },{ width: 13 },{ width: 14 },{ width: 12 }];
     const C = { orange: 'FFFFC000', clientBg: 'FFFF8C00', prodBg: 'FFFF6600', greenBg: 'FF00B050', yellowBg: 'FFFFFF00' };
     const hStyle = (argbBg, argbFg = 'FF000000') => ({ font: { bold: true, color: { argb: argbFg }, size: 10 }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: argbBg } }, alignment: { horizontal: 'center', vertical: 'middle', wrapText: true }, border: { top: { style: 'medium', color: { argb: 'FF000000' } }, left: { style: 'medium', color: { argb: 'FF000000' } }, bottom: { style: 'medium', color: { argb: 'FF000000' } }, right: { style: 'medium', color: { argb: 'FF000000' } } } });
@@ -325,7 +325,7 @@ router.get('/zito-report/excel', async (req, res) => {
     }
     if (rows.length === 0) ws.addRow(['Нема податоци за избраниот период']);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="ZitoLuks_${date_from}_${date_to}.xlsx"`);
+    res.setHeader('Content-Disposition', `attachment; filename="TopMarket_${date_from}_${date_to}.xlsx"`);
     await wb.xlsx.write(res);
     res.end();
   } catch (e) { res.status(500).json({ error: e.message }); }
