@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: topmarket-config
+  namespace: topmarket-namespace
+data:
+  POSTGRES_DB: "topmarket"
+  POSTGRES_USER: "topmarket"
+  BACKEND_PORT: "3002"
+  FRONTEND_PORT: "3000"
+  WORKER_PORT: "3001"
+  TZ: "Europe/Skopje"
+  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+  PUPPETEER_EXECUTABLE_PATH: "/usr/bin/google-chrome-stable"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: topmarket-secrets
+  namespace: topmarket-namespace
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: "topmarket_secret"
+  SESSION_SECRET: "zitoLuks-super-secret-2024"
+  DATABASE_URL: "postgres://topmarket:topmarket_secret@db:5432/topmarket"
+  SOCKS5_PROXY: "100.104.217.75:1080"

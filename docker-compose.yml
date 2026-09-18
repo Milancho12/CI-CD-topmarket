@@ -1,6 +1,6 @@
 services:
 
-  # ── Сервис 1: PostgreSQL база на податоци ──────────────────
+  
   db:
     image: postgres:16-alpine
     container_name: topmarket-db
@@ -17,7 +17,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # ── Сервис 2: Backend REST API ─────────────────────────────
+  
   backend:
     build: ./backend
     container_name: topmarket-backend
@@ -30,7 +30,7 @@ services:
       db:
         condition: service_healthy
 
-  # ── Сервис 3: Frontend (EJS + Express) ─────────────────────
+ 
   frontend:
     build: ./frontend
     container_name: topmarket-frontend
@@ -45,7 +45,7 @@ services:
     depends_on:
       - backend
 
-  # ── Сервис 4: Worker (Puppeteer + Chrome) ──────────────────
+  
   worker:
     build: ./worker
     container_name: topmarket-worker
