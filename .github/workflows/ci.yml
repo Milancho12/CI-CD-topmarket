@@ -68,5 +68,5 @@ jobs:
           script: |
             cd ~/topmarket
             # Prevents conflicts with other docker projects by explicitly naming the project
-            docker-compose -p topmarket pull
-            docker-compose -p topmarket up -d
+            docker compose -p topmarket pull
+            docker compose -p topmarket up -d
