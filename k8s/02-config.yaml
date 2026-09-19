@@ -25,3 +25,4 @@ stringData:
   SESSION_SECRET: "zitoLuks-super-secret-2024"
   DATABASE_URL: "postgres://topmarket:topmarket_secret@db:5432/topmarket"
   SOCKS5_PROXY: "100.104.217.75:1080"
+  

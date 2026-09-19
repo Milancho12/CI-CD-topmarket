@@ -56,7 +56,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "docker-compose.yml"
+          source: "docker-compose.prod.yml"
           target: "~/topmarket"
 
       - name: Deploy via SSH
@@ -67,6 +67,8 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd ~/topmarket
+            # Rename the file so docker compose picks it up automatically
+            mv docker-compose.prod.yml docker-compose.yml
             # Prevents conflicts with other docker projects by explicitly naming the project
             docker compose -p topmarket pull
             docker compose -p topmarket up -d
